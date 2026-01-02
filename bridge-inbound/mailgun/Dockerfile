@@ -5,15 +5,12 @@ WORKDIR /app
 # Copy and build inbound-core first
 COPY bridge-inbound/core /inbound-core
 WORKDIR /inbound-core
-RUN npm install && npm run build
+RUN npm install && npm run build && npm link
 
 # Now build inbound-mailgun
 WORKDIR /app
-COPY bridge-inbound/mailgun/package*.json ./
-RUN npm install
-
 COPY bridge-inbound/mailgun .
-RUN npm run build
+RUN npm install && npm link inbound-core && npm run build
 
 EXPOSE 3001
 
