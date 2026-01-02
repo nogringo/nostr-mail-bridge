@@ -1,0 +1,16 @@
+myhostname = mail.example.com
+mydomain = example.com
+myorigin = $mydomain
+
+inet_interfaces = all
+inet_protocols = ipv4
+
+smtpd_relay_restrictions = permit_mynetworks, reject_unauth_destination
+mynetworks = 127.0.0.0/8 172.16.0.0/12 192.168.0.0/16 10.0.0.0/8
+
+# Disable auth for internal network
+smtpd_sasl_auth_enable = no
+
+# Queue settings
+maximal_queue_lifetime = 1d
+bounce_queue_lifetime = 1d

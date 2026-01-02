@@ -1,0 +1,33 @@
+{
+  "name": "bridge",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Nostr to email bridge - listens to Nostr, sends via Mailgun",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "keywords": [
+    "nostr",
+    "email",
+    "bridge",
+    "mailgun"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "inbound-core": "file:../bridge-inbound/core",
+    "nodemailer": "^7.0.12",
+    "nostr-tools": "^2.19.4",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.3",
+    "@types/nodemailer": "^7.0.4",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

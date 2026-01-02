@@ -1,0 +1,57 @@
+services:
+  # Inbound: receives emails via SMTP, publishes to Nostr
+  inbound-smtp:
+    build:
+      context: .
+      dockerfile: bridge-inbound/smtp/Dockerfile
+    ports:
+      - "25:25"
+    environment:
+      - INBOUND_PRIVATE_KEY=${INBOUND_PRIVATE_KEY}
+      - RELAYS=${RELAYS:-wss://relay.damus.io,wss://nos.lol}
+      - SMTP_PORT=25
+      - SMTP_HOST=0.0.0.0
+      - PLUGIN_PATH=${PLUGIN_PATH:-}
+    volumes:
+      - ./bridge-plugins:/app/plugins
+    restart: unless-stopped
+
+  # Outbound: listens to Nostr, sends emails via Postfix
+  bridge:
+    build:
+      context: .
+      dockerfile: bridge-outbound/Dockerfile
+    environment:
+      - BRIDGE_PRIVATE_KEY=${BRIDGE_PRIVATE_KEY}
+      - RELAYS=${RELAYS:-wss://relay.damus.io,wss://nos.lol}
+      - OUTBOUND_PROVIDER=smtp
+      - FROM_DOMAIN=${FROM_DOMAIN}
+      - SMTP_HOST=postfix
+      - SMTP_PORT=25
+      - SMTP_SECURE=false
+      - PLUGIN_PATH=${PLUGIN_PATH:-}
+    volumes:
+      - ./bridge-plugins:/app/bridge/plugins
+    depends_on:
+      - postfix
+    restart: unless-stopped
+
+  # NIP-05 discovery service
+  nip05-service:
+    build:
+      context: ./nip05-service
+    ports:
+      - "3000:3000"
+    environment:
+      - BRIDGE_PUBKEY=${BRIDGE_PUBKEY}
+      - USER_STORE_PATH=/data/users.json
+      - HTTP_PORT=3000
+    volumes:
+      - ./nip05-data:/data
+    restart: unless-stopped
+
+  # Postfix for outbound email delivery
+  postfix:
+    build:
+      context: ./postfix
+    restart: unless-stopped
