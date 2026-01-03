@@ -9,10 +9,11 @@ app.use(express.json());
 
 app.post('/webhook', async (req, res) => {
   try {
-    const email = parseMailgunWebhook(req.body as MailgunWebhookBody, config.mailgunWebhookSecret);
+    const { email, error } = parseMailgunWebhook(req.body as MailgunWebhookBody, config.mailgunWebhookSecret);
+
     if (!email) {
-      console.error('Invalid or unverified webhook');
-      return res.status(401).json({ error: 'Invalid signature' });
+      console.error('Webhook verification failed:', error);
+      return res.status(401).json({ error: error || 'Invalid webhook' });
     }
 
     console.log(`Received email from ${email.from} to ${email.to}`);

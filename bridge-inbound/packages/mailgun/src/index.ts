@@ -7,4 +7,9 @@ export type {
 } from './types.js';
 
 // Parser
-export { parseMailgunWebhook, verifyMailgunSignature } from './parser.js';
+export {
+  parseMailgunWebhook,
+  verifyMailgunSignature,
+  type ParseResult,
+  type VerifyResult,
+} from './parser.js';
