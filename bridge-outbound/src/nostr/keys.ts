@@ -1,11 +1,24 @@
-import { getPublicKey } from 'nostr-tools';
+import { getPublicKey, nip19 } from 'nostr-tools';
 import { config } from '../config.js';
 
 export function getBridgePrivateKey(): Uint8Array {
   if (!config.bridgePrivateKey) {
     throw new Error('BRIDGE_PRIVATE_KEY not configured');
   }
-  return hexToBytes(config.bridgePrivateKey);
+
+  const key = config.bridgePrivateKey.trim();
+
+  // Support nsec format (bech32)
+  if (key.startsWith('nsec1')) {
+    const decoded = nip19.decode(key);
+    if (decoded.type !== 'nsec') {
+      throw new Error('Invalid nsec format');
+    }
+    return decoded.data;
+  }
+
+  // Hex format
+  return hexToBytes(key);
 }
 
 export function getBridgePubkey(): string {
