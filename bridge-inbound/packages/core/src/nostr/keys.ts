@@ -1,4 +1,4 @@
-import { getPublicKey } from 'nostr-tools';
+import { getPublicKey, nip19 } from 'nostr-tools';
 import { getConfig } from '../config.js';
 
 export function getInboundPrivateKey(): Uint8Array {
@@ -6,7 +6,19 @@ export function getInboundPrivateKey(): Uint8Array {
   if (!config.inboundPrivateKey) {
     throw new Error('inboundPrivateKey not configured');
   }
-  return hexToBytes(config.inboundPrivateKey);
+  return parsePrivateKey(config.inboundPrivateKey);
+}
+
+function parsePrivateKey(key: string): Uint8Array {
+  // Support both nsec and hex formats
+  if (key.startsWith('nsec')) {
+    const decoded = nip19.decode(key);
+    if (decoded.type !== 'nsec') {
+      throw new Error('Invalid nsec format');
+    }
+    return decoded.data;
+  }
+  return hexToBytes(key);
 }
 
 export function getInboundPubkey(): string {
