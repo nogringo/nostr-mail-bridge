@@ -1,5 +1,5 @@
 {
-  "name": "inbound-smtp",
+  "name": "inbound-smtp-server",
   "version": "1.0.0",
   "type": "module",
   "description": "SMTP server - receives email, publishes to Nostr",
@@ -17,7 +17,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "inbound-core": "file:../core",
+    "@nostr-mail-bridge/core": "file:../packages/core",
     "dotenv": "^17.2.3",
     "mailparser": "^3.9.1",
     "smtp-server": "^3.18.0"

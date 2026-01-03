@@ -2,16 +2,18 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Copy and build inbound-core first
-COPY bridge-inbound/core /inbound-core
-WORKDIR /inbound-core
-RUN npm install && npm run build && npm link
+# Create structure matching package.json paths
+COPY bridge-inbound/packages ./bridge-inbound/packages
 
-# Now build inbound-mailgun
-WORKDIR /app
-COPY bridge-inbound/mailgun .
-RUN npm install && npm link inbound-core && npm run build
+# Build packages
+RUN cd bridge-inbound/packages/core && npm install && npm run build
+RUN cd bridge-inbound/packages/mailgun && npm install && npm run build
 
+# Copy and build server
+COPY bridge-inbound/mailgun ./bridge-inbound/mailgun
+RUN cd bridge-inbound/mailgun && npm install && npm run build
+
+WORKDIR /app/bridge-inbound/mailgun
 EXPOSE 3001
 
 CMD ["npm", "start"]

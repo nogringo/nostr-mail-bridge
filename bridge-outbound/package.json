@@ -1,5 +1,5 @@
 {
-  "name": "bridge",
+  "name": "bridge-outbound",
   "version": "1.0.0",
   "type": "module",
   "description": "Nostr to email bridge - listens to Nostr, sends via Mailgun",
@@ -17,8 +17,8 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@nostr-mail-bridge/core": "file:../bridge-inbound/packages/core",
     "dotenv": "^17.2.3",
-    "inbound-core": "file:../bridge-inbound/core",
     "nodemailer": "^7.0.12",
     "nostr-tools": "^2.19.4",
     "ws": "^8.18.3"

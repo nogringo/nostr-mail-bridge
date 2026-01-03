@@ -1,7 +1,7 @@
 import express from 'express';
 import { config } from './config.js';
-import { parseMailgunWebhook, MailgunWebhookBody } from './mailgun.js';
-import { processIncomingEmail } from 'inbound-core';
+import { parseMailgunWebhook, type MailgunWebhookBody } from '@nostr-mail-bridge/mailgun';
+import { processIncomingEmail } from '@nostr-mail-bridge/core';
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -9,7 +9,7 @@ app.use(express.json());
 
 app.post('/webhook', async (req, res) => {
   try {
-    const email = parseMailgunWebhook(req.body as MailgunWebhookBody);
+    const email = parseMailgunWebhook(req.body as MailgunWebhookBody, config.mailgunWebhookSecret);
     if (!email) {
       console.error('Invalid or unverified webhook');
       return res.status(401).json({ error: 'Invalid signature' });
@@ -36,5 +36,5 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(config.httpPort, () => {
-  console.log(`Inbound Mailgun service running on port ${config.httpPort}`);
+  console.log(`Inbound Mailgun server running on port ${config.httpPort}`);
 });

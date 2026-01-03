@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { initConfig } from 'inbound-core';
+import { initConfig } from '@nostr-mail-bridge/core';
 
 dotenv.config();
 
@@ -13,7 +13,7 @@ export const config = {
   smtpHost: process.env.SMTP_HOST || '0.0.0.0',
 };
 
-// Initialize inbound-core with shared config
+// Initialize core with shared config
 initConfig({
   inboundPrivateKey: config.inboundPrivateKey,
   relays: config.relays,

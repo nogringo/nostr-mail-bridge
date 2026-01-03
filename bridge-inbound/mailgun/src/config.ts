@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { initConfig } from 'inbound-core';
+import { initConfig } from '@nostr-mail-bridge/core';
 
 dotenv.config();
 
@@ -11,7 +11,7 @@ export const config = {
   httpPort: parseInt(process.env.HTTP_PORT || '3001', 10),
 };
 
-// Initialize inbound-core with shared config
+// Initialize core with shared config
 initConfig({
   inboundPrivateKey: config.inboundPrivateKey,
   relays: config.relays,

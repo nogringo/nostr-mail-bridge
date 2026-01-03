@@ -2,11 +2,11 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Copy core first
-COPY bridge-inbound/core ./bridge-inbound/core
-RUN cd bridge-inbound/core && npm install && npm run build
+# Create structure matching package.json paths
+COPY bridge-inbound/packages/core ./bridge-inbound/packages/core
+RUN cd bridge-inbound/packages/core && npm install && npm run build
 
-# Copy bridge-outbound
+# Copy and build bridge-outbound
 COPY bridge-outbound ./bridge-outbound
 RUN cd bridge-outbound && npm install && npm run build
 

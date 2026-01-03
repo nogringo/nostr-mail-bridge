@@ -1,68 +1,52 @@
 import crypto from 'crypto';
-import { IncomingEmail } from 'inbound-core';
-import { config } from './config.js';
-
-// Mailgun events webhook format (tracking events)
-export interface MailgunEventsWebhook {
-  signature: {
-    timestamp: string;
-    token: string;
-    signature: string;
-  };
-  'event-data': {
-    message: {
-      headers: {
-        from: string;
-        to: string;
-        subject: string;
-      };
-    };
-  };
-}
-
-// Mailgun routes/store() format (inbound email)
-export interface MailgunRoutesWebhook {
-  sender: string;
-  recipient: string;
-  from: string;
-  subject: string;
-  'body-plain': string;
-  timestamp: string;
-  token: string;
-  signature: string;
-}
-
-export type MailgunWebhookBody = MailgunEventsWebhook | MailgunRoutesWebhook;
+import type { IncomingEmail, MailgunWebhookBody, MailgunRoutesWebhook } from './types.js';
 
 function isRoutesWebhook(body: MailgunWebhookBody): body is MailgunRoutesWebhook {
   return 'sender' in body || ('from' in body && typeof body.from === 'string');
 }
 
+/**
+ * Verify Mailgun webhook signature
+ * @param timestamp - Webhook timestamp
+ * @param token - Webhook token
+ * @param signature - Webhook signature
+ * @param secret - Mailgun webhook signing key (optional, skips verification if not provided)
+ */
 export function verifyMailgunSignature(
   timestamp: string,
   token: string,
-  signature: string
+  signature: string,
+  secret?: string
 ): boolean {
-  if (!config.mailgunWebhookSecret) {
-    console.warn('MAILGUN_WEBHOOK_SECRET not set, skipping verification');
+  if (!secret) {
+    console.warn('Mailgun webhook secret not provided, skipping verification');
     return true;
   }
 
   const data = timestamp + token;
   const expectedSignature = crypto
-    .createHmac('sha256', config.mailgunWebhookSecret)
+    .createHmac('sha256', secret)
     .update(data)
     .digest('hex');
 
   return expectedSignature === signature;
 }
 
-export function parseMailgunWebhook(body: MailgunWebhookBody): IncomingEmail | null {
+/**
+ * Parse Mailgun webhook body into IncomingEmail
+ * @param body - Mailgun webhook body
+ * @param secret - Mailgun webhook signing key (optional)
+ * @returns Parsed email or null if invalid/unverified
+ */
+export function parseMailgunWebhook(
+  body: MailgunWebhookBody,
+  secret?: string
+): IncomingEmail | null {
   // Mailgun routes/store() format (multipart form data)
   if (isRoutesWebhook(body)) {
     const { timestamp, token, signature } = body;
 
-    if (!verifyMailgunSignature(timestamp, token, signature)) {
+    if (!verifyMailgunSignature(timestamp, token, signature, secret)) {
       return null;
     }
 
@@ -79,7 +63,7 @@ export function parseMailgunWebhook(body: MailgunWebhookBody): IncomingEmail | n
   if ('signature' in body && 'event-data' in body) {
     const { timestamp, token, signature } = body.signature;
 
-    if (!verifyMailgunSignature(timestamp, token, signature)) {
+    if (!verifyMailgunSignature(timestamp, token, signature, secret)) {
       return null;
     }
 

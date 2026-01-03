@@ -1,0 +1,23 @@
+{
+  "name": "@nostr-mail-bridge/mailgun",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Mailgun webhook parser for nostr-mail-bridge",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "nostr",
+    "mailgun",
+    "email",
+    "webhook"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.3"
+  }
+}
