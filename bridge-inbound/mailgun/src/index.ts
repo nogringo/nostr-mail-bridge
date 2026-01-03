@@ -1,7 +1,7 @@
 import express from 'express';
 import { config } from './config.js';
-import { parseMailgunWebhook, type MailgunWebhookBody } from '@nostr-mail-bridge/mailgun';
-import { processIncomingEmail } from '@nostr-mail-bridge/core';
+import { parseMailgunWebhook, type MailgunWebhookBody } from '@nostr-mail/bridge-inbound-mailgun';
+import { processIncomingEmail } from '@nostr-mail/bridge-inbound-core';
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));

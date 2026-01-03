@@ -1,6 +1,6 @@
 {
-  "name": "@nostr-mail-bridge/core",
-  "version": "1.0.0",
+  "name": "@nostr-mail/bridge-inbound-core",
+  "version": "1.0.1",
   "type": "module",
   "description": "Core library for email to Nostr bridge",
   "main": "dist/index.js",

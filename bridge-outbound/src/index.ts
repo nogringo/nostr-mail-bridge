@@ -3,7 +3,7 @@ import { isGiftWrap, unwrapGiftWrap, getHeader, replaceHeader } from './nostr/ni
 import { createOutboundProvider } from './outbound/index.js';
 import { config } from './config.js';
 import { nip19 } from 'nostr-tools';
-import { runPlugin } from '@nostr-mail-bridge/core';
+import { runPlugin } from '@nostr-mail/bridge-inbound-core';
 
 const outbound = createOutboundProvider();
 

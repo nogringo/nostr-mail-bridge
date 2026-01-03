@@ -1,7 +1,7 @@
 import { SMTPServer } from 'smtp-server';
 import { simpleParser } from 'mailparser';
 import { config } from './config.js';
-import { type IncomingEmail, processIncomingEmail } from '@nostr-mail-bridge/core';
+import { type IncomingEmail, processIncomingEmail } from '@nostr-mail/bridge-inbound-core';
 
 const server = new SMTPServer({
   authOptional: true,
