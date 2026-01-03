@@ -4,10 +4,11 @@ import { createOutboundProvider } from './outbound/index.js';
 import { config } from './config.js';
 import { nip19 } from 'nostr-tools';
 import { runPlugin } from '@nostr-mail/bridge-inbound-core';
+import { fetchProcessedIds, publishProcessedLabel } from './nostr/labels.js';
 
 const outbound = createOutboundProvider();
 
-const processedEvents = new Set<string>();
+let processedEvents = new Set<string>();
 
 function pubkeyToNpub(pubkey: string): string {
   return nip19.npubEncode(pubkey);
@@ -59,16 +60,9 @@ async function validateOrRewriteFrom(
 }
 
 async function handleGiftWrap(event: any): Promise<void> {
-  // Deduplicate events
+  // Deduplicate events (check against labels from relays)
   if (processedEvents.has(event.id)) {
     return;
-  }
-  processedEvents.add(event.id);
-
-  // Keep set from growing indefinitely
-  if (processedEvents.size > 10000) {
-    const entries = Array.from(processedEvents);
-    entries.slice(0, 5000).forEach((id) => processedEvents.delete(id));
   }
 
   if (!isGiftWrap(event)) {
@@ -119,12 +113,24 @@ async function handleGiftWrap(event: any): Promise<void> {
       raw: rawContent,
     });
     console.log(`Successfully sent email to ${email.to}`);
+
+    // Mark as processed (publish label for deduplication)
+    processedEvents.add(event.id);
+    await publishProcessedLabel(event.id);
   } catch (error) {
     console.error(`Failed to send email:`, error);
   }
 }
 
-console.log('Starting Nostr to Email bridge...');
-console.log(`Using outbound provider: ${outbound.name}`);
+async function main() {
+  console.log('Starting Nostr to Email bridge...');
+  console.log(`Using outbound provider: ${outbound.name}`);
 
-subscribeToGiftWraps(handleGiftWrap);
+  // Load previously processed events from relays (for deduplication)
+  processedEvents = await fetchProcessedIds();
+
+  // Start listening for new gift-wrapped emails
+  subscribeToGiftWraps(handleGiftWrap);
+}
+
+main().catch(console.error);
