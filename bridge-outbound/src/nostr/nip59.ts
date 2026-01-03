@@ -29,22 +29,41 @@ export function replaceHeader(content: string, headerName: string, newValue: str
   const lines = content.split('\n');
   const lowerName = headerName.toLowerCase();
   let found = false;
+  let skipContinuation = false;
 
-  const newLines = lines.map((line) => {
-    if (!found && line.trim() !== '') {
-      const colonIndex = line.indexOf(':');
+  const newLines: string[] = [];
+
+  for (const line of lines) {
+    // Remove \r if present (handle CRLF)
+    const cleanLine = line.replace(/\r$/, '');
+
+    // Check if this is a continuation line (starts with space or tab)
+    const isContinuation = /^[ \t]/.test(cleanLine);
+
+    // Skip continuation lines of the header we just replaced
+    if (skipContinuation && isContinuation) {
+      continue;
+    }
+    skipContinuation = false;
+
+    // Look for the header to replace (only in header section)
+    if (!found && cleanLine.trim() !== '') {
+      const colonIndex = cleanLine.indexOf(':');
       if (colonIndex > 0) {
-        const key = line.substring(0, colonIndex).toLowerCase();
+        const key = cleanLine.substring(0, colonIndex).toLowerCase().trim();
         if (key === lowerName) {
           found = true;
-          return `${headerName}: ${newValue}`;
+          skipContinuation = true;
+          newLines.push(`${headerName}: ${newValue}`);
+          continue;
         }
       }
     }
-    return line;
-  });
 
-  return newLines.join('\n');
+    newLines.push(cleanLine);
+  }
+
+  return newLines.join('\r\n');
 }
 
 export function unwrapGiftWrap(giftWrap: any): UnwrappedEmail | null {
