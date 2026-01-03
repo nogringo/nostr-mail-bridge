@@ -19,7 +19,10 @@ export class MailgunProvider implements OutboundProvider {
 
     this.apiKey = config.mailgunApiKey;
     this.domain = config.mailgunDomain;
-    this.baseUrl = `https://api.mailgun.net/v3/${this.domain}`;
+
+    const host = config.mailgunRegion === 'eu' ? 'api.eu.mailgun.net' : 'api.mailgun.net';
+    this.baseUrl = `https://${host}/v3/${this.domain}`;
+    console.log(`Mailgun configured: ${this.baseUrl} (region: ${config.mailgunRegion})`);
   }
 
   async send(email: OutgoingEmail): Promise<void> {

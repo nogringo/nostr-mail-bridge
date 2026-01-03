@@ -16,6 +16,7 @@ export const config = {
   // Mailgun settings
   mailgunApiKey: process.env.MAILGUN_API_KEY || '',
   mailgunDomain: process.env.MAILGUN_DOMAIN || '',
+  mailgunRegion: process.env.MAILGUN_REGION || 'us',
 
   // SMTP settings
   smtpHost: process.env.SMTP_HOST || 'localhost',
