@@ -2,23 +2,21 @@ import { onRequest } from "firebase-functions/https";
 import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import { parseMailgunWebhook, type MailgunWebhookBody } from "@nostr-mail/bridge-inbound-mailgun";
-import { processIncomingEmail, initConfig } from "@nostr-mail/bridge-inbound-core";
+import { processIncomingEmail, initConfig, extractPubkeyFromEmail, getInboundPubkey } from "@nostr-mail/bridge-inbound-core";
+import { uidOvhPlugin } from "./plugins/uid-ovh/index.js";
 
-// Secrets
 const inboundPrivateKey = defineSecret("INBOUND_PRIVATE_KEY");
 const mailgunWebhookSecret = defineSecret("MAILGUN_WEBHOOK_SECRET");
-const relays = defineSecret("RELAYS");
 
 let initialized = false;
 
 export const mailgunWebhook = onRequest(
-  { secrets: [inboundPrivateKey, mailgunWebhookSecret, relays] },
+  { secrets: [inboundPrivateKey, mailgunWebhookSecret] },
   async (req, res) => {
-    // Initialize config on first request
     if (!initialized) {
       initConfig({
         inboundPrivateKey: inboundPrivateKey.value(),
-        relays: relays.value().split(","),
+        relays: process.env.RELAYS?.split(",") || [],
       });
       initialized = true;
     }
@@ -42,8 +40,29 @@ export const mailgunWebhook = onRequest(
 
       logger.info(`Received email from ${email.from} to ${email.to}`);
 
-      const sourceIP = req.ip || "firebase";
-      const result = await processIncomingEmail(email, "mailgun", sourceIP);
+      // Extract recipient pubkey
+      const recipientPubkey = await extractPubkeyFromEmail(email.to);
+      if (!recipientPubkey) {
+        res.status(400).json({ error: "Invalid recipient" });
+        return;
+      }
+
+      // Check if recipient is authorized
+      const authorized = await uidOvhPlugin({
+        recipientPubkey,
+        whitelistOwnerPubkey: getInboundPubkey(),
+        relays: process.env.RELAYS?.split(",") || [],
+        nip85Relay: process.env.NIP85_RELAY || "",
+        nip85ProviderPubkey: process.env.NIP85_PROVIDER_PUBKEY || "",
+        minScore: parseInt(process.env.MIN_SCORE || "20", 10),
+      });
+      if (!authorized) {
+        logger.info(`Recipient ${recipientPubkey} not authorized`);
+        res.status(403).json({ error: "Recipient not authorized" });
+        return;
+      }
+
+      const result = await processIncomingEmail(email, "mailgun", "mailgun");
 
       if (result.action === "reject") {
         res.status(403).json({ error: result.message || "Email rejected" });

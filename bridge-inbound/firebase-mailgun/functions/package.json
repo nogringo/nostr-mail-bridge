@@ -18,9 +18,12 @@
     "@nostr-mail/bridge-inbound-core": "^1.0.0",
     "@nostr-mail/bridge-inbound-mailgun": "^1.0.0",
     "firebase-admin": "^13.6.0",
-    "firebase-functions": "^7.0.0"
+    "firebase-functions": "^7.0.0",
+    "nostr-tools": "^2.19.4",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@types/ws": "^8.18.1",
     "firebase-functions-test": "^3.4.1",
     "typescript": "^5.7.3"
   },
