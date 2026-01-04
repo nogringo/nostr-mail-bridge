@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { PluginInput, PluginOutput } from './types.js';
 
-const TIMEOUT_MS = 5000;
+const TIMEOUT_MS = parseInt(process.env.PLUGIN_TIMEOUT_MS || '30000', 10);
 
 export async function runPlugin(
   pluginPath: string | undefined,
