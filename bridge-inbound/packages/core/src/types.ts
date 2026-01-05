@@ -10,6 +10,7 @@ export interface CoreConfig {
   inboundPrivateKey: string;
   relays: string[];
   pluginPath?: string;
+  sendDmCopy?: boolean;
 }
 
 export interface ProcessResult {
