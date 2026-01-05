@@ -7,6 +7,7 @@ export const config = {
   inboundPrivateKey: process.env.INBOUND_PRIVATE_KEY || '',
   relays: (process.env.RELAYS || 'wss://relay.damus.io').split(','),
   pluginPath: process.env.PLUGIN_PATH || undefined,
+  sendDmCopy: process.env.SEND_DM_COPY === 'true',
 
   // SMTP server settings
   smtpPort: parseInt(process.env.SMTP_PORT || '25', 10),
@@ -18,4 +19,5 @@ initConfig({
   inboundPrivateKey: config.inboundPrivateKey,
   relays: config.relays,
   pluginPath: config.pluginPath,
+  sendDmCopy: config.sendDmCopy,
 });

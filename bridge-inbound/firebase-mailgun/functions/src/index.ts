@@ -17,6 +17,7 @@ export const mailgunWebhook = onRequest(
       initConfig({
         inboundPrivateKey: inboundPrivateKey.value(),
         relays: process.env.RELAYS?.split(",") || [],
+        sendDmCopy: process.env.SEND_DM_COPY === "true",
       });
       initialized = true;
     }

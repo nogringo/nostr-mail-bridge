@@ -1,6 +1,7 @@
 import { IncomingEmail, ProcessResult } from './types.js';
 import { extractPubkeyFromEmail } from './email.js';
 import { giftWrapEmail } from './nostr/nip59.js';
+import { sendNip17DmCopy } from './nostr/nip17.js';
 import { fetchDMRelays, publishToRelays } from './nostr/client.js';
 import { runPlugin } from './plugin/index.js';
 import { getConfig } from './config.js';
@@ -55,5 +56,16 @@ export async function processIncomingEmail(
   await publishToRelays(wrappedEvent, dmRelays);
 
   console.log(`Published gift-wrapped event for ${recipientPubkey} to ${dmRelays.length} relays`);
+
+  // 4. Send NIP-17 DM copy if enabled
+  if (config.sendDmCopy) {
+    try {
+      await sendNip17DmCopy(email, recipientPubkey, dmRelays);
+      console.log(`Sent NIP-17 DM copy for ${recipientPubkey}`);
+    } catch (err) {
+      console.error(`Failed to send DM copy: ${err}`);
+    }
+  }
+
   return { success: true, action: 'accept' };
 }

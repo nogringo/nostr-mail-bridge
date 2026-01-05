@@ -8,6 +8,7 @@ export const config = {
   mailgunWebhookSecret: process.env.MAILGUN_WEBHOOK_SECRET || '',
   relays: (process.env.RELAYS || 'wss://relay.damus.io').split(','),
   pluginPath: process.env.PLUGIN_PATH || undefined,
+  sendDmCopy: process.env.SEND_DM_COPY === 'true',
   httpPort: parseInt(process.env.HTTP_PORT || '3001', 10),
 };
 
@@ -16,4 +17,5 @@ initConfig({
   inboundPrivateKey: config.inboundPrivateKey,
   relays: config.relays,
   pluginPath: config.pluginPath,
+  sendDmCopy: config.sendDmCopy,
 });
