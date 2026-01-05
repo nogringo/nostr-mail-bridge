@@ -15,7 +15,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "@nostr-mail/bridge-inbound-core": "^1.0.0",
+    "@nostr-mail/bridge-inbound-core": "^1.1.0",
     "@nostr-mail/bridge-inbound-mailgun": "^1.0.0",
     "firebase-admin": "^13.6.0",
     "firebase-functions": "^7.0.0",
