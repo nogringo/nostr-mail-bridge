@@ -1,5 +1,5 @@
 import { wrapEvent, createRumor } from 'nostr-tools/nip59';
-import { getInboundPrivateKey, getInboundPubkeyBytes } from './keys.js';
+import { getInboundPrivateKey } from './keys.js';
 import { publishToRelays } from './client.js';
 import { IncomingEmail } from '../types.js';
 
@@ -29,17 +29,6 @@ function formatDmContent(email: IncomingEmail): string {
   ].join('\n');
 }
 
-function createDmRumor(content: string, recipientPubkey: string) {
-  return createRumor(
-    {
-      kind: KIND_DM,
-      tags: [['p', recipientPubkey]],
-      content,
-    },
-    getInboundPubkeyBytes()
-  );
-}
-
 export async function sendNip17DmCopy(
   email: IncomingEmail,
   recipientPubkey: string,
@@ -48,7 +37,14 @@ export async function sendNip17DmCopy(
   const senderPrivateKey = getInboundPrivateKey();
   const message = formatDmContent(email);
 
-  const rumor = createDmRumor(message, recipientPubkey);
+  const rumor = createRumor(
+    {
+      kind: KIND_DM,
+      tags: [['p', recipientPubkey]],
+      content: message,
+    },
+    senderPrivateKey
+  );
   const wrappedDm = wrapEvent(rumor, senderPrivateKey, recipientPubkey);
 
   await publishToRelays(wrappedDm, relays);

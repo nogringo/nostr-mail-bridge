@@ -1,5 +1,5 @@
 import { wrapEvent, createRumor } from 'nostr-tools/nip59';
-import { getInboundPrivateKey, getInboundPubkeyBytes } from './keys.js';
+import { getInboundPrivateKey } from './keys.js';
 import { IncomingEmail } from '../types.js';
 
 const KIND_EMAIL = 1301;
@@ -27,7 +27,7 @@ export function createEmailRumor(email: IncomingEmail, recipientPubkey: string) 
       ],
       content: formatRfc2822Content(email),
     },
-    getInboundPubkeyBytes()
+    getInboundPrivateKey()
   );
 }
 
