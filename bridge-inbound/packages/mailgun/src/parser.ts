@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'crypto';
-import type { IncomingEmail, MailgunWebhookBody, MailgunRoutesWebhook } from './types.js';
+import { simpleParser } from 'mailparser';
+import type { IncomingEmail, MailgunWebhookBody, MailgunMimeWebhook, MailgunRoutesWebhook, Attachment } from './types.js';
 
 /** Default max age for webhook timestamps (5 minutes) */
 const DEFAULT_MAX_AGE = 300;
@@ -9,8 +10,12 @@ export interface VerifyResult {
   error?: string;
 }
 
+function isMimeWebhook(body: MailgunWebhookBody): body is MailgunMimeWebhook {
+  return 'body-mime' in body;
+}
+
 function isRoutesWebhook(body: MailgunWebhookBody): body is MailgunRoutesWebhook {
-  return 'sender' in body || ('from' in body && typeof body.from === 'string');
+  return 'body-plain' in body;
 }
 
 /**
@@ -68,36 +73,118 @@ export interface ParseResult {
 }
 
 /**
+ * Parse Mailgun MIME webhook body into IncomingEmail
+ * @param body - Mailgun MIME webhook body
+ * @param secret - Mailgun webhook signing key (optional)
+ * @returns Parsed email and optional error
+ */
+async function parseMimeWebhook(
+  body: MailgunMimeWebhook,
+  secret?: string
+): Promise<ParseResult> {
+  const { timestamp, token, signature } = body;
+
+  const verifyResult = verifyMailgunSignature(timestamp, token, signature, secret);
+  if (!verifyResult.valid) {
+    return { email: null, error: verifyResult.error };
+  }
+
+  const rawMime = body['body-mime'];
+
+  try {
+    const parsed = await simpleParser(rawMime);
+
+    const attachments: Attachment[] = (parsed.attachments || []).map(att => ({
+      filename: att.filename,
+      contentType: att.contentType,
+      content: att.content,
+      size: att.size,
+      contentId: att.contentId,
+    }));
+
+    return {
+      email: {
+        from: typeof parsed.from?.text === 'string' ? parsed.from.text : body.from,
+        to: typeof parsed.to === 'string' ? parsed.to :
+            (Array.isArray(parsed.to) ? parsed.to.map(t => t.text).join(', ') :
+            (parsed.to?.text || body.recipient)),
+        subject: parsed.subject || body.subject || '',
+        text: parsed.text || '',
+        html: parsed.html || undefined,
+        raw: rawMime,
+        attachments,
+        timestamp: parseInt(timestamp, 10) || Math.floor(Date.now() / 1000),
+      },
+    };
+  } catch (err) {
+    return { email: null, error: `Failed to parse MIME: ${err}` };
+  }
+}
+
+/**
+ * Parse Mailgun legacy routes webhook body into IncomingEmail (fallback)
+ * @param body - Mailgun routes webhook body
+ * @param secret - Mailgun webhook signing key (optional)
+ * @returns Parsed email and optional error
+ */
+function parseRoutesWebhook(
+  body: MailgunRoutesWebhook,
+  secret?: string
+): ParseResult {
+  const { timestamp, token, signature } = body;
+
+  const verifyResult = verifyMailgunSignature(timestamp, token, signature, secret);
+  if (!verifyResult.valid) {
+    return { email: null, error: verifyResult.error };
+  }
+
+  // Reconstruct a basic MIME from available fields
+  const date = new Date(parseInt(timestamp, 10) * 1000).toUTCString();
+  const rawMime = [
+    `From: ${body.from}`,
+    `To: ${body.recipient}`,
+    `Subject: ${body.subject}`,
+    `Date: ${date}`,
+    '',
+    body['body-plain'],
+  ].join('\r\n');
+
+  return {
+    email: {
+      from: body.sender || body.from,
+      to: body.recipient,
+      subject: body.subject,
+      text: body['body-plain'] || '',
+      html: body['body-html'] || undefined,
+      raw: rawMime,
+      attachments: [],
+      timestamp: parseInt(timestamp, 10) || Math.floor(Date.now() / 1000),
+    },
+  };
+}
+
+/**
  * Parse Mailgun webhook body into IncomingEmail
+ * Supports both MIME format (preferred) and legacy routes format
  * @param body - Mailgun webhook body
  * @param secret - Mailgun webhook signing key (optional)
  * @returns Parsed email and optional error
  */
-export function parseMailgunWebhook(
+export async function parseMailgunWebhook(
   body: MailgunWebhookBody,
   secret?: string
-): ParseResult {
-  // Mailgun routes/store() format (multipart form data)
-  if (isRoutesWebhook(body)) {
-    const { timestamp, token, signature } = body;
-
-    const verifyResult = verifyMailgunSignature(timestamp, token, signature, secret);
-    if (!verifyResult.valid) {
-      return { email: null, error: verifyResult.error };
-    }
-
-    return {
-      email: {
-        from: body.sender || body.from,
-        to: body.recipient,
-        subject: body.subject,
-        body: body['body-plain'] || '',
-        timestamp: parseInt(timestamp, 10) || Math.floor(Date.now() / 1000),
-      },
-    };
+): Promise<ParseResult> {
+  // MIME format (preferred - URL ends with /mime)
+  if (isMimeWebhook(body)) {
+    return parseMimeWebhook(body, secret);
   }
 
-  // Mailgun events webhook format
+  // Legacy routes/store() format (multipart form data)
+  if (isRoutesWebhook(body)) {
+    return parseRoutesWebhook(body, secret);
+  }
+
+  // Mailgun events webhook format (tracking events - no email body)
   if ('signature' in body && 'event-data' in body) {
     const { timestamp, token, signature } = body.signature;
 
@@ -112,7 +199,10 @@ export function parseMailgunWebhook(
         from: headers.from,
         to: headers.to,
         subject: headers.subject,
-        body: '',
+        text: '',
+        html: undefined,
+        raw: '',
+        attachments: [],
         timestamp: parseInt(timestamp, 10),
       },
     };

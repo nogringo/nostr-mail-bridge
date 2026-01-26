@@ -28,7 +28,7 @@ export const mailgunWebhook = onRequest(
     }
 
     try {
-      const { email, error } = parseMailgunWebhook(
+      const { email, error } = await parseMailgunWebhook(
         req.body as MailgunWebhookBody,
         mailgunWebhookSecret.value()
       );

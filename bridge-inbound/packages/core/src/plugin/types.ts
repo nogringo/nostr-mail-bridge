@@ -4,7 +4,8 @@ export interface PluginInput {
     from: string;
     to: string;
     subject: string;
-    body: string;
+    text: string;
+    html?: string;
     senderPubkey?: string;
     recipientPubkey?: string;
   };

@@ -9,7 +9,7 @@ const PREVIEW_LENGTH = 200;
 function formatDmContent(email: IncomingEmail): string {
   const date = new Date(email.timestamp * 1000).toUTCString();
 
-  let bodyPreview = email.body.trim();
+  let bodyPreview = email.text.trim();
   if (bodyPreview.length > PREVIEW_LENGTH) {
     bodyPreview = bodyPreview.substring(0, PREVIEW_LENGTH).trim() + '...';
   }

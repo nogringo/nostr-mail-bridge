@@ -9,7 +9,7 @@ app.use(express.json());
 
 app.post('/webhook', async (req, res) => {
   try {
-    const { email, error } = parseMailgunWebhook(req.body as MailgunWebhookBody, config.mailgunWebhookSecret);
+    const { email, error } = await parseMailgunWebhook(req.body as MailgunWebhookBody, config.mailgunWebhookSecret);
 
     if (!email) {
       console.error('Webhook verification failed:', error);

@@ -21,7 +21,10 @@ const testEmail: IncomingEmail = {
   from: 'sender@example.com',
   to: 'recipient@example.com',
   subject: 'Test Subject',
-  body: 'This is a test email body that should appear in the DM preview.',
+  text: 'This is a test email body that should appear in the DM preview.',
+  html: undefined,
+  raw: 'From: sender@example.com\r\nTo: recipient@example.com\r\nSubject: Test Subject\r\n\r\nThis is a test email body that should appear in the DM preview.',
+  attachments: [],
   timestamp: 1704067200,
 };
 
@@ -56,7 +59,7 @@ describe('nip17 - DM Copy', () => {
   });
 
   it('should truncate long email bodies in preview', async () => {
-    const longEmail = { ...testEmail, body: 'A'.repeat(300) };
+    const longEmail = { ...testEmail, text: 'A'.repeat(300) };
 
     await sendNip17DmCopy(longEmail, RECIPIENT_PUBKEY, ['wss://relay.example.com']);
 

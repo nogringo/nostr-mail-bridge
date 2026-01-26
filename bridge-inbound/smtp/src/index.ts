@@ -30,11 +30,22 @@ const server = new SMTPServer({
               ? parsed.to[0]?.value?.[0]?.address || ''
               : parsed.to?.value?.[0]?.address || '';
 
+        const attachments = (parsed.attachments || []).map(att => ({
+          filename: att.filename,
+          contentType: att.contentType,
+          content: att.content,
+          size: att.size,
+          contentId: att.contentId,
+        }));
+
         const email: IncomingEmail = {
           from,
           to,
           subject: parsed.subject || '(no subject)',
-          body: parsed.text || '',
+          text: parsed.text || '',
+          html: parsed.html || undefined,
+          raw: emailData,
+          attachments,
           timestamp: Math.floor(Date.now() / 1000),
         };
 

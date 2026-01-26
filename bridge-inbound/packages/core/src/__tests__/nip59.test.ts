@@ -16,7 +16,10 @@ const testEmail: IncomingEmail = {
   from: 'sender@example.com',
   to: 'recipient@example.com',
   subject: 'Test Subject',
-  body: 'This is a test email body.',
+  text: 'This is a test email body.',
+  html: undefined,
+  raw: 'From: sender@example.com\r\nTo: recipient@example.com\r\nSubject: Test Subject\r\nDate: Mon, 01 Jan 2024 00:00:00 GMT\r\n\r\nThis is a test email body.',
+  attachments: [],
   timestamp: 1704067200,
 };
 

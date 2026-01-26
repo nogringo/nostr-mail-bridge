@@ -2,7 +2,7 @@
 export { initConfig, getConfig } from './config.js';
 
 // Types
-export { IncomingEmail, CoreConfig, ProcessResult } from './types.js';
+export { Attachment, IncomingEmail, CoreConfig, ProcessResult } from './types.js';
 
 // Email utilities
 export { extractPubkeyFromEmail, lookupNip05 } from './email.js';

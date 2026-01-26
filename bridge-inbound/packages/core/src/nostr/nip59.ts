@@ -4,18 +4,6 @@ import { IncomingEmail } from '../types.js';
 
 const KIND_EMAIL = 1301;
 
-function formatRfc2822Content(email: IncomingEmail): string {
-  const date = new Date(email.timestamp * 1000).toUTCString();
-  return [
-    `From: ${email.from}`,
-    `To: ${email.to}`,
-    `Subject: ${email.subject}`,
-    `Date: ${date}`,
-    '',
-    email.body,
-  ].join('\r\n');
-}
-
 export function createEmailRumor(email: IncomingEmail, recipientPubkey: string) {
   return createRumor(
     {
@@ -25,7 +13,7 @@ export function createEmailRumor(email: IncomingEmail, recipientPubkey: string) 
         ['subject', email.subject],
         ['from', email.from],
       ],
-      content: formatRfc2822Content(email),
+      content: email.raw,
     },
     getInboundPrivateKey()
   );

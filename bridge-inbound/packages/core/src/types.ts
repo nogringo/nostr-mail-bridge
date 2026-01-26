@@ -1,8 +1,19 @@
+export interface Attachment {
+  filename?: string;
+  contentType: string;
+  content: Buffer;
+  size: number;
+  contentId?: string;
+}
+
 export interface IncomingEmail {
   from: string;
   to: string;
   subject: string;
-  body: string;
+  text: string;
+  html?: string;
+  raw: string;
+  attachments: Attachment[];
   timestamp: number;
 }
 

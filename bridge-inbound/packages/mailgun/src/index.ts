@@ -1,7 +1,9 @@
 // Types
 export type {
+  Attachment,
   IncomingEmail,
   MailgunEventsWebhook,
+  MailgunMimeWebhook,
   MailgunRoutesWebhook,
   MailgunWebhookBody,
 } from './types.js';
