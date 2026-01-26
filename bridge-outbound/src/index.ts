@@ -87,7 +87,7 @@ async function handleGiftWrap(event: any): Promise<void> {
         from: getHeader(email.rawContent, 'From') || '',
         to: email.to,
         subject: getHeader(email.rawContent, 'Subject') || '',
-        body: email.rawContent,
+        text: email.rawContent,
         senderPubkey: email.senderPubkey,
       },
       receivedAt: Math.floor(Date.now() / 1000),
