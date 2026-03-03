@@ -105,9 +105,7 @@ async function parseMimeWebhook(
     return {
       email: {
         from: typeof parsed.from?.text === 'string' ? parsed.from.text : body.from,
-        to: typeof parsed.to === 'string' ? parsed.to :
-            (Array.isArray(parsed.to) ? parsed.to.map(t => t.text).join(', ') :
-            (parsed.to?.text || body.recipient)),
+        to: body.recipient,
         subject: parsed.subject || body.subject || '',
         text: parsed.text || '',
         html: parsed.html || undefined,
