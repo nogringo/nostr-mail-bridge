@@ -9,6 +9,8 @@ const server = new SMTPServer({
 
   onData(stream, session, callback) {
     let emailData = '';
+    // Get envelope recipients captured in onRcptTo
+    const envelopeRecipients: string[] = (session as any).envelopeRecipients || [];
 
     stream.on('data', (chunk) => {
       emailData += chunk.toString();
@@ -16,19 +18,19 @@ const server = new SMTPServer({
 
     stream.on('end', async () => {
       try {
+        // Reject if no envelope recipients (RCPT TO missing)
+        if (envelopeRecipients.length === 0) {
+          console.error('No envelope recipients (RCPT TO missing)');
+          callback(new Error('No recipients'));
+          return;
+        }
+
         const parsed = await simpleParser(emailData);
 
         const from =
           typeof parsed.from?.text === 'string'
             ? parsed.from.text
             : parsed.from?.value?.[0]?.address || '';
-
-        const to =
-          typeof parsed.to === 'string'
-            ? parsed.to
-            : Array.isArray(parsed.to)
-              ? parsed.to[0]?.value?.[0]?.address || ''
-              : parsed.to?.value?.[0]?.address || '';
 
         const attachments = (parsed.attachments || []).map(att => ({
           filename: att.filename,
@@ -38,27 +40,41 @@ const server = new SMTPServer({
           contentId: att.contentId,
         }));
 
-        const email: IncomingEmail = {
-          from,
-          to,
-          subject: parsed.subject || '(no subject)',
-          text: parsed.text || '',
-          html: parsed.html || undefined,
-          raw: emailData,
-          attachments,
-          timestamp: Math.floor(Date.now() / 1000),
-        };
-
+        // Process each envelope recipient separately (one Nostr event per recipient)
+        // This ensures BCC recipients get their own event and proper routing
         const clientIP = session.remoteAddress || 'unknown';
-        console.log(`Received email from ${email.from} to ${email.to}`);
+        const results = await Promise.all(
+          envelopeRecipients.map(async (recipient) => {
+            const email: IncomingEmail = {
+              from,
+              to: recipient,
+              subject: parsed.subject || '(no subject)',
+              text: parsed.text || '',
+              html: parsed.html || undefined,
+              raw: emailData,
+              attachments,
+              timestamp: Math.floor(Date.now() / 1000),
+            };
 
-        const result = await processIncomingEmail(email, 'smtp', clientIP);
+            console.log(`Processing email from ${email.from} to ${recipient}`);
+            return { recipient, result: await processIncomingEmail(email, 'smtp', clientIP) };
+          })
+        );
 
-        if (result.action === 'reject') {
-          callback(new Error(result.message || 'Email rejected'));
-        } else {
-          callback();
-        }
+        // Log individual rejections but don't fail the whole email
+        // Each recipient is processed independently
+        results.forEach(({ recipient, result }) => {
+          if (result.action === 'reject') {
+            console.warn(`Rejected for ${recipient}: ${result.message}`);
+          } else if (result.action === 'shadowReject') {
+            console.warn(`Shadow rejected for ${recipient}: ${result.message}`);
+          } else {
+            console.log(`Accepted for ${recipient}`);
+          }
+        });
+
+        // Always accept at SMTP level - individual recipient failures are logged
+        callback();
       } catch (error) {
         console.error('Error processing email:', error);
         callback(new Error('Error processing email'));
@@ -67,6 +83,11 @@ const server = new SMTPServer({
   },
 
   onRcptTo(address, session, callback) {
+    // Capture envelope recipients for use in onData
+    if (!(session as any).envelopeRecipients) {
+      (session as any).envelopeRecipients = [];
+    }
+    (session as any).envelopeRecipients.push(address.address);
     callback();
   },
 });

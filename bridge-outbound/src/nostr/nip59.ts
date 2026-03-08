@@ -75,15 +75,17 @@ export function unwrapGiftWrap(giftWrap: any): UnwrappedEmail | null {
       return null;
     }
 
-    const to = getHeader(rumor.content, 'To');
-    if (!to) {
-      console.error('No "To" header found in RFC 2822 content');
+    // Get envelope recipient from rcpt tag
+    const rcpt = rumor.tags?.find((t: string[]) => t[0] === 'rcpt')?.[1];
+    
+    if (!rcpt) {
+      console.error('No "rcpt" tag found');
       return null;
     }
 
     return {
       senderPubkey: rumor.pubkey,
-      to,
+      rcpt,
       rawContent: rumor.content,
     };
   } catch (error) {

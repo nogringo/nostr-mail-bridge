@@ -77,7 +77,7 @@ async function handleGiftWrap(event: any): Promise<void> {
     return;
   }
 
-  console.log(`Unwrapped email from ${email.senderPubkey} to ${email.to}`);
+  console.log(`Unwrapped email from ${email.senderPubkey} to ${email.rcpt}`);
 
   // Run plugin filter (if configured)
   try {
@@ -85,7 +85,7 @@ async function handleGiftWrap(event: any): Promise<void> {
       type: 'outbound',
       event: {
         from: getHeader(email.rawContent, 'From') || '',
-        to: email.to,
+        to: email.rcpt,
         subject: getHeader(email.rawContent, 'Subject') || '',
         text: email.rawContent,
         senderPubkey: email.senderPubkey,
@@ -96,7 +96,7 @@ async function handleGiftWrap(event: any): Promise<void> {
     });
 
     if (pluginResult.action !== 'accept') {
-      console.log(`Plugin rejected email to ${email.to}: ${pluginResult.msg}`);
+      console.log(`Plugin rejected email to ${email.rcpt}: ${pluginResult.msg}`);
       return;
     }
   } catch (err) {
@@ -109,10 +109,10 @@ async function handleGiftWrap(event: any): Promise<void> {
 
   try {
     await outbound.send({
-      to: email.to,
+      to: email.rcpt,
       raw: rawContent,
     });
-    console.log(`Successfully sent email to ${email.to}`);
+    console.log(`Successfully sent email to ${email.rcpt}`);
 
     // Mark as processed (publish label for deduplication)
     processedEvents.add(event.id);

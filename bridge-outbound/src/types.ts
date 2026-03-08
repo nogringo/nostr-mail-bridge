@@ -5,6 +5,6 @@ export interface OutgoingEmail {
 
 export interface UnwrappedEmail {
   senderPubkey: string;
-  to: string;
+  rcpt: string; // Envelope recipient from rcpt tag (used for SMTP delivery)
   rawContent: string;
 }
