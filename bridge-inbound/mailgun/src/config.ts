@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { initConfig } from '@nostr-mail/bridge-inbound-core';
+import { initConfig } from '@nostr-mail/bridge-core';
 
 dotenv.config();
 

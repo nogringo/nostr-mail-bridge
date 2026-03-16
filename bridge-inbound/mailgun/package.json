@@ -17,7 +17,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@nostr-mail/bridge-inbound-core": "file:../packages/core",
+    "@nostr-mail/bridge-core": "file:../../bridge-core",
     "@nostr-mail/bridge-inbound-mailgun": "file:../packages/mailgun",
     "dotenv": "^17.2.3",
     "express": "^5.2.1"

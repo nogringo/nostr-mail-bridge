@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { unwrapEvent } from 'nostr-tools/nip59';
-import { hexToBytes } from '@noble/hashes/utils';
+import { hexToBytes } from '@noble/hashes/utils.js';
 import { initConfig } from '../config.js';
 import { IncomingEmail } from '../types.js';
 

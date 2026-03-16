@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { getPublicKey } from 'nostr-tools';
 import { unwrapEvent } from 'nostr-tools/nip59';
-import { hexToBytes } from '@noble/hashes/utils';
+import { hexToBytes } from '@noble/hashes/utils.js';
 import { initConfig } from '../config.js';
 import { giftWrapEmail } from '../nostr/nip59.js';
 import { IncomingEmail } from '../types.js';

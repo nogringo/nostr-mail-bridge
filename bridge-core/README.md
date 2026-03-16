@@ -1,17 +1,17 @@
-# @nostr-mail/bridge-inbound-core
+# @nostr-mail/bridge-core
 
 Core library for the Nostr Mail Bridge inbound system. Handles email-to-Nostr message processing using NIP-59 gift wrap encryption.
 
 ## Installation
 
 ```bash
-npm i @nostr-mail/bridge-inbound-core
+npm i @nostr-mail/bridge-core
 ```
 
 ## Usage
 
 ```typescript
-import { processIncomingEmail, initConfig, type IncomingEmail } from '@nostr-mail/bridge-inbound-core';
+import { processIncomingEmail, initConfig, type IncomingEmail } from '@nostr-mail/bridge-core';
 
 // Initialize configuration
 initConfig({
