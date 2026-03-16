@@ -8,8 +8,7 @@ export { Attachment, IncomingEmail, CoreConfig, ProcessResult } from './types.js
 export { extractPubkeyFromEmail, lookupNip05 } from './email.js';
 
 // Nostr
-export { giftWrapEmail, createEmailRumor } from './nostr/nip59.js';
-export { fetchDMRelays, publishToRelays } from './nostr/client.js';
+export { NostrMailClient } from 'nostr-mail';
 export { getInboundPrivateKey, getInboundPubkey, getInboundPubkeyBytes, hexToBytes } from './nostr/keys.js';
 
 // Plugin
