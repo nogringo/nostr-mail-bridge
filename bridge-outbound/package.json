@@ -21,7 +21,9 @@
     "@nostr-mail/bridge-core": "file:../bridge-core",
     "dotenv": "^17.2.3",
     "nodemailer": "^7.0.12",
+    "nostr-mail": "file:../../nostr-mail-js",
     "nostr-tools": "^2.23.3",
+    "postal-mime": "^2.7.3",
     "ws": "^8.18.3"
   },
   "devDependencies": {
