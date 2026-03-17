@@ -9,6 +9,7 @@ export { extractPubkeyFromEmail, lookupNip05 } from './email.js';
 
 // Nostr
 export { NostrMailClient } from 'nostr-mail';
+export { fetchDMRelays, publishToRelays } from './nostr/client.js';
 export { getInboundPrivateKey, getInboundPubkey, getInboundPubkeyBytes, hexToBytes } from './nostr/keys.js';
 
 // Plugin
