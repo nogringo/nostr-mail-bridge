@@ -2,63 +2,13 @@ import { NostrMailClient, Email } from 'nostr-mail';
 import { getBridgePrivateKey } from './nostr/keys.js';
 import { createOutboundProvider } from './outbound/index.js';
 import { config } from './config.js';
-import { nip19 } from 'nostr-tools';
 import { runPlugin } from '@nostr-mail/bridge-core';
 import { fetchProcessedIds, publishProcessedLabel } from './nostr/labels.js';
-import { getHeader, replaceHeader } from './utils/mime.js';
+import { validateFrom } from './validation/from.js';
 
 const outbound = createOutboundProvider();
 
 let processedEvents = new Set<string>();
-
-function pubkeyToNpub(pubkey: string): string {
-  return nip19.npubEncode(pubkey);
-}
-
-async function resolveNip05(identifier: string): Promise<string | null> {
-  const parts = identifier.split('@');
-  if (parts.length !== 2) return null;
-
-  const [name, domain] = parts;
-  const url = `https://${domain}/.well-known/nostr.json?name=${encodeURIComponent(name)}`;
-
-  try {
-    const response = await fetch(url);
-    if (!response.ok) return null;
-
-    const json = (await response.json()) as { names?: Record<string, string> };
-    const pubkey = json?.names?.[name];
-    return typeof pubkey === 'string' ? pubkey : null;
-  } catch {
-    return null;
-  }
-}
-
-async function validateOrRewriteFrom(
-  rawContent: string,
-  senderPubkey: string
-): Promise<string> {
-  const from = await getHeader(rawContent, 'From');
-
-  if (from && from.includes('@')) {
-    // Extract email from "Name <email>" format if needed
-    const emailMatch = from.match(/<([^>]+)>/) || [null, from];
-    const email = emailMatch[1] || from;
-
-    // Try to resolve as NIP-05
-    const resolvedPubkey = await resolveNip05(email);
-
-    if (resolvedPubkey === senderPubkey) {
-      console.log(`From address ${email} verified via NIP-05`);
-      return rawContent;
-    }
-  }
-
-  // Rewrite From with npub@domain
-  const npubFrom = `${pubkeyToNpub(senderPubkey)}@${config.fromDomain}`;
-  console.log(`Rewriting From to ${npubFrom}`);
-  return await replaceHeader(rawContent, 'From', npubFrom);
-}
 
 async function handleEmail(email: Email): Promise<void> {
   // Deduplicate events (using the Gift Wrap ID)
@@ -79,6 +29,13 @@ async function handleEmail(email: Email): Promise<void> {
 
   console.log(`Received email from ${email.from.pubkey} to ${rcpt}`);
 
+  // Validate FROM (must be bridge domain + NIP-05 verified)
+  const senderPubkey = email.from.pubkey;
+  if (!senderPubkey) {
+    console.warn('No sender pubkey found in email');
+    return;
+  }
+
   // Run plugin filter (if configured)
   try {
     const pluginResult = await runPlugin(config.pluginPath, {
@@ -88,7 +45,7 @@ async function handleEmail(email: Email): Promise<void> {
         to: rcpt,
         subject: email.subject || '',
         text: email.mime,
-        senderPubkey: email.from.pubkey || '',
+        senderPubkey,
       },
       receivedAt: Math.floor(Date.now() / 1000),
       sourceType: 'nostr',
@@ -104,13 +61,15 @@ async function handleEmail(email: Email): Promise<void> {
     return;
   }
 
-  // Validate From or rewrite with npub
-  const rawContent = await validateOrRewriteFrom(email.mime, email.from.pubkey || '');
+  // Validate FROM (must be bridge domain + NIP-05 verified)
+  if (!await validateFrom(email.mime, senderPubkey)) {
+    return;
+  }
 
   try {
     await outbound.send({
       to: rcpt,
-      raw: rawContent,
+      raw: email.mime,
     });
     console.log(`Successfully sent email to ${rcpt}`);
 
