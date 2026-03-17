@@ -1,0 +1,28 @@
+# Tests
+dist/__tests__/
+vitest.config.ts
+
+# Docker
+Dockerfile
+
+# Development
+.env
+.env.*
+*.log
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docs (keep README, license)
+TODO.md
