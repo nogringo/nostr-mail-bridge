@@ -10,7 +10,10 @@ export async function validateFrom(
   const parser = new PostalMime();
   const parsed = await parser.parse(rawContent);
 
-  const email = parsed.from?.address || parsed.sender?.address;
+  // Workaround: postal-mime doesn't properly unfold headers (RFC 2822),
+  // leaving whitespace artifacts in email addresses.
+  let email = parsed.from?.address || parsed.sender?.address;
+  if (email) email = email.trim().replace(/\s+/g, '');
 
   if (!email || !email.includes('@')) {
     console.warn('Invalid FROM header: missing or malformed');
