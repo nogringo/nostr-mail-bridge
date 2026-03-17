@@ -1,22 +1,22 @@
-import { getHeader } from '../utils/mime.js';
 import { config } from '../config.js';
 import { resolveNip05 } from '../utils/nip05.js';
 import { nip19 } from 'nostr-tools';
+import PostalMime from 'postal-mime';
 
 export async function validateFrom(
   rawContent: string,
   senderPubkey: string
 ): Promise<boolean> {
-  const from = await getHeader(rawContent, 'From');
+  const parser = new PostalMime();
+  const parsed = await parser.parse(rawContent);
 
-  if (!from || !from.includes('@')) {
+  const email = parsed.from?.address || parsed.sender?.address;
+
+  if (!email || !email.includes('@')) {
     console.warn('Invalid FROM header: missing or malformed');
     return false;
   }
 
-  // Extract email from "Name <email>" format if needed
-  const emailMatch = from.match(/<([^>]+)>/) || [null, from];
-  const email = (emailMatch[1] || from).trim();
   const domain = email.split('@')[1]?.toLowerCase();
 
   // 1. MUST be the bridge's domain
