@@ -54,7 +54,7 @@ export async function processIncomingEmail(
   // 3. Send via NostrMailClient
   try {
     const client = new NostrMailClient(privateKey, config.relays);
-    
+
     await client.sendEmail({
       to: recipientPubkey,
       subject: email.subject,
@@ -64,7 +64,7 @@ export async function processIncomingEmail(
 
     console.log(`Email from ${email.from} processed and sent to ${recipientPubkey}`);
     await client.close();
-    
+
   } catch (err) {
     console.error(`Failed to send email via Nostr: ${err}`);
     return { success: false, action: 'reject', message: 'Nostr delivery failed' };

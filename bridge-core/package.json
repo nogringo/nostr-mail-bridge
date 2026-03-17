@@ -18,7 +18,7 @@
   "license": "MIT",
   "dependencies": {
     "dotenv": "^17.2.3",
-    "nostr-mail": "file:../../nostr-mail-js",
+    "nostr-mail": "^0.2.0",
     "nostr-tools": "^2.23.3",
     "ws": "^8.18.3"
   },
