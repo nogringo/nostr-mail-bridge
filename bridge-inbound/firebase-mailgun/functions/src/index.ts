@@ -2,7 +2,7 @@ import { onRequest } from "firebase-functions/https";
 import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import { parseMailgunWebhook, type MailgunWebhookBody } from "@nostr-mail/bridge-inbound-mailgun";
-import { processIncomingEmail, initConfig, extractPubkeyFromEmail, getInboundPubkey } from "@nostr-mail/bridge-inbound-core";
+import { processIncomingEmail, initConfig, extractPubkeyFromEmail, getInboundPubkey } from "@nostr-mail/bridge-core";
 import { uidOvhPlugin } from "./plugins/uid-ovh/index.js";
 
 const inboundPrivateKey = defineSecret("INBOUND_PRIVATE_KEY");

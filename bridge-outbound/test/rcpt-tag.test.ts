@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { generateSecretKey, getPublicKey } from 'nostr-tools/pure';
-import { wrapEvent } from 'nostr-tools/nip59';
+import { nip59 } from 'nostr-tools';
 
 /**
  * Test envelope recipient handling for outbound emails (Nostr → SMTP)
@@ -22,10 +22,8 @@ vi.mock('../src/nostr/keys.js', () => ({
   getBridgePubkey: () => bridgePk,
 }));
 
-const { unwrapGiftWrap } = await import('../src/nostr/nip59.js');
-
 describe('Outbound rcpt Tag Handling', () => {
-  it('should read rcpt tag from unwrapped event', () => {
+  it('should read rcpt tag from unwrapped event', async () => {
     const emailContent = `From: sender@bridge.mail
 To: recipient@example.com
 Subject: Test
@@ -33,7 +31,7 @@ Subject: Test
 Test message.
 `;
 
-    const wrappedEvent = wrapEvent(
+    const wrappedEvent = await nip59.wrapEvent(
       {
         kind: 1301,
         content: emailContent,
@@ -43,13 +41,13 @@ Test message.
       bridgePk
     );
 
-    const unwrapped = unwrapGiftWrap(wrappedEvent);
-    
+    const unwrapped = await nip59.unwrapEvent(wrappedEvent, bridgeSk);
+
     expect(unwrapped).not.toBeNull();
-    expect(unwrapped?.rcpt).toBe('actual-recipient@example.com');
+    expect(unwrapped.tags).toContainEqual(['rcpt', 'actual-recipient@example.com']);
   });
 
-  it('should use rcpt tag instead of MIME To header', () => {
+  it('should use rcpt tag instead of MIME To header', async () => {
     const emailContent = `From: sender@bridge.mail
 To: visible@example.com
 Subject: Test
@@ -57,7 +55,7 @@ Subject: Test
 Test message.
 `;
 
-    const wrappedEvent = wrapEvent(
+    const wrappedEvent = await nip59.wrapEvent(
       {
         kind: 1301,
         content: emailContent,
@@ -67,12 +65,12 @@ Test message.
       bridgePk
     );
 
-    const unwrapped = unwrapGiftWrap(wrappedEvent);
-    
-    expect(unwrapped?.rcpt).toBe('envelope-recipient@example.com');
+    const unwrapped = await nip59.unwrapEvent(wrappedEvent, bridgeSk);
+
+    expect(unwrapped.tags).toContainEqual(['rcpt', 'envelope-recipient@example.com']);
   });
 
-  it('should handle BCC recipients (rcpt tag only, not in MIME)', () => {
+  it('should handle BCC recipients (rcpt tag only, not in MIME)', async () => {
     const emailContent = `From: sender@bridge.mail
 To: visible@example.com
 Subject: Test
@@ -80,7 +78,7 @@ Subject: Test
 Test message.
 `;
 
-    const wrappedEvent = wrapEvent(
+    const wrappedEvent = await nip59.wrapEvent(
       {
         kind: 1301,
         content: emailContent,
@@ -90,12 +88,12 @@ Test message.
       bridgePk
     );
 
-    const unwrapped = unwrapGiftWrap(wrappedEvent);
-    
-    expect(unwrapped?.rcpt).toBe('bcc-hidden@example.com');
+    const unwrapped = await nip59.unwrapEvent(wrappedEvent, bridgeSk);
+
+    expect(unwrapped.tags).toContainEqual(['rcpt', 'bcc-hidden@example.com']);
   });
 
-  it('should reject event without rcpt tag', () => {
+  it('should handle event without rcpt tag', async () => {
     const emailContent = `From: sender@bridge.mail
 To: recipient@example.com
 Subject: Test
@@ -103,7 +101,7 @@ Subject: Test
 Test message.
 `;
 
-    const wrappedEvent = wrapEvent(
+    const wrappedEvent = await nip59.wrapEvent(
       {
         kind: 1301,
         content: emailContent,
@@ -113,12 +111,12 @@ Test message.
       bridgePk
     );
 
-    const unwrapped = unwrapGiftWrap(wrappedEvent);
-    
-    expect(unwrapped).toBeNull();
+    const unwrapped = await nip59.unwrapEvent(wrappedEvent, bridgeSk);
+
+    expect(unwrapped.tags.find(t => t[0] === 'rcpt')).toBeUndefined();
   });
 
-  it('should handle multiple recipients (one event per recipient)', () => {
+  it('should handle multiple recipients (one event per recipient)', async () => {
     const emailContent = `From: sender@bridge.mail
 To: visible@example.com
 Subject: Test
@@ -127,8 +125,8 @@ Test message.
 `;
 
     const recipients = ['to@example.com', 'cc@example.com', 'bcc-hidden@example.com'];
-    
-    const events = recipients.map(rcpt => wrapEvent(
+
+    const events = await Promise.all(recipients.map(rcpt => nip59.wrapEvent(
       {
         kind: 1301,
         content: emailContent,
@@ -136,14 +134,17 @@ Test message.
       },
       senderSk,
       bridgePk
-    ));
+    )));
 
-    const unwrappedRecipients = events.map(event => unwrapGiftWrap(event)?.rcpt);
-    
+    const unwrappedRecipients = events.map(event => {
+      const unwrapped = nip59.unwrapEvent(event, bridgeSk);
+      return unwrapped.tags.find(t => t[0] === 'rcpt')?.[1];
+    });
+
     expect(unwrappedRecipients).toEqual(recipients);
   });
 
-  it('should preserve rawContent for SMTP delivery', () => {
+  it('should preserve content for SMTP delivery', async () => {
     const emailContent = `From: sender@bridge.mail
 To: recipient@example.com
 Subject: Test Subject
@@ -151,7 +152,7 @@ Subject: Test Subject
 This is the email body.
 `;
 
-    const wrappedEvent = wrapEvent(
+    const wrappedEvent = await nip59.wrapEvent(
       {
         kind: 1301,
         content: emailContent,
@@ -161,9 +162,9 @@ This is the email body.
       bridgePk
     );
 
-    const unwrapped = unwrapGiftWrap(wrappedEvent);
-    
+    const unwrapped = await nip59.unwrapEvent(wrappedEvent, bridgeSk);
+
     expect(unwrapped).not.toBeNull();
-    expect(unwrapped?.rawContent).toBe(emailContent);
+    expect(unwrapped.content).toBe(emailContent);
   });
 });

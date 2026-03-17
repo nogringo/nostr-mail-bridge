@@ -1,8 +1,7 @@
+import { NostrMailClient } from 'nostr-mail';
 import { IncomingEmail, ProcessResult } from './types.js';
 import { extractPubkeyFromEmail } from './email.js';
-import { giftWrapEmail } from './nostr/nip59.js';
-import { sendNip17DmCopy } from './nostr/nip17.js';
-import { fetchDMRelays, publishToRelays } from './nostr/client.js';
+import { getInboundPrivateKey } from './nostr/keys.js';
 import { runPlugin } from './plugin/index.js';
 import { getConfig } from './config.js';
 
@@ -12,6 +11,7 @@ export async function processIncomingEmail(
   sourceInfo: string
 ): Promise<ProcessResult> {
   const config = getConfig();
+  const privateKey = getInboundPrivateKey();
 
   // 1. Extract recipient pubkey
   const recipientPubkey = await extractPubkeyFromEmail(email.to);
@@ -51,21 +51,23 @@ export async function processIncomingEmail(
     return { success: false, action: 'reject', message: 'Plugin error' };
   }
 
-  // 3. Gift-wrap and publish
-  const dmRelays = await fetchDMRelays(recipientPubkey);
-  const wrappedEvent = giftWrapEmail(email, recipientPubkey);
-  await publishToRelays(wrappedEvent, dmRelays);
+  // 3. Send via NostrMailClient
+  try {
+    const client = new NostrMailClient(privateKey, config.relays);
 
-  console.log(`Published gift-wrapped event for ${recipientPubkey} to ${dmRelays.length} relays`);
+    await client.sendEmail({
+      to: recipientPubkey,
+      subject: email.subject,
+      mime: email.raw,
+      selfCopy: false,
+    });
 
-  // 4. Send NIP-17 DM copy if enabled
-  if (config.sendDmCopy) {
-    try {
-      await sendNip17DmCopy(email, recipientPubkey, dmRelays);
-      console.log(`Sent NIP-17 DM copy for ${recipientPubkey}`);
-    } catch (err) {
-      console.error(`Failed to send DM copy: ${err}`);
-    }
+    console.log(`Email from ${email.from} processed and sent to ${recipientPubkey}`);
+    await client.close();
+
+  } catch (err) {
+    console.error(`Failed to send email via Nostr: ${err}`);
+    return { success: false, action: 'reject', message: 'Nostr delivery failed' };
   }
 
   return { success: true, action: 'accept' };
