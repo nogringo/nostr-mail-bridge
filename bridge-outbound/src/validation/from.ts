@@ -1,6 +1,7 @@
 import { getHeader } from '../utils/mime.js';
 import { config } from '../config.js';
 import { resolveNip05 } from '../utils/nip05.js';
+import { nip19 } from 'nostr-tools';
 
 export async function validateFrom(
   rawContent: string,
@@ -24,7 +25,21 @@ export async function validateFrom(
     return false;
   }
 
-  // 2. MUST be verified via NIP-05 to prevent impersonation
+  // 2. Check if email is npub@domain format (direct pubkey verification)
+  const localPart = email.split('@')[0];
+  if (localPart.startsWith('npub1')) {
+    try {
+      const { type, data } = nip19.decode(localPart);
+      if (type === 'npub' && data === senderPubkey) {
+        console.log(`From address ${email} verified via npub format`);
+        return true;
+      }
+    } catch {
+      // Invalid npub format, fall through to NIP-05 verification
+    }
+  }
+
+  // 3. MUST be verified via NIP-05 to prevent impersonation
   const resolvedPubkey = await resolveNip05(email);
 
   if (resolvedPubkey !== senderPubkey) {

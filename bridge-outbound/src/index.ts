@@ -97,3 +97,6 @@ async function main() {
 }
 
 main().catch(console.error);
+
+// Export for testing
+export { handleEmail };
