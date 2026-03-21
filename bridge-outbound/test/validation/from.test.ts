@@ -199,5 +199,19 @@ Body.
 
       expect(result).toBe(true);
     });
+
+    it.skip('should handle RFC 2822 header folding in FROM address', async () => {
+      // Folded FROM header
+      const mime = `From: ${senderNpub}@bridge
+ .example.com
+To: bob@example.com
+Subject: Test
+
+Body.
+`;
+      const result = await validateFrom(mime, senderPk);
+
+      expect(result).toBe(true);
+    });
   });
 });
