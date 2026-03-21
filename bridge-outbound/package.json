@@ -18,10 +18,10 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@nostr-mail/bridge-core": "file:../bridge-core",
+    "@nostr-mail/bridge-core": "^1.2.2",
     "dotenv": "^17.2.3",
     "nodemailer": "^7.0.12",
-    "nostr-mail": "^0.2.0",
+    "nostr-mail": "^0.3.1",
     "nostr-tools": "^2.23.3",
     "postal-mime": "^2.7.3",
     "ws": "^8.18.3"

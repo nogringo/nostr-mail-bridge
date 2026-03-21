@@ -18,7 +18,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@nostr-mail/bridge-core": "file:../../bridge-core",
+    "@nostr-mail/bridge-core": "^1.2.2",
     "dotenv": "^17.2.3",
     "mailparser": "^3.9.1",
     "smtp-server": "^3.18.0"
