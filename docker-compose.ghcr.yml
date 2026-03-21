@@ -1,9 +1,7 @@
 services:
   # Inbound: receives emails via SMTP, publishes to Nostr
   inbound-smtp:
-    build:
-      context: .
-      dockerfile: bridge-inbound/smtp/Dockerfile
+    image: ghcr.io/nogringo/nostr-mail-inbound-smtp:latest
     ports:
       - "25:25"
     environment:
@@ -17,9 +15,7 @@ services:
 
   # Outbound: listens to Nostr, sends emails via Postfix
   bridge:
-    build:
-      context: .
-      dockerfile: bridge-outbound/Dockerfile
+    image: ghcr.io/nogringo/nostr-mail-outbound:latest
     environment:
       - BRIDGE_PRIVATE_KEY=${BRIDGE_PRIVATE_KEY}
       - OUTBOUND_PROVIDER=smtp
@@ -36,8 +32,7 @@ services:
 
   # NIP-05 discovery service
   nip05-service:
-    build:
-      context: ./nip05-service
+    image: ghcr.io/nogringo/nostr-mail-nip05-service:latest
     ports:
       - "3000:3000"
     environment:
@@ -50,6 +45,5 @@ services:
 
   # Postfix for outbound email delivery
   postfix:
-    build:
-      context: ./postfix
+    image: ghcr.io/nogringo/nostr-mail-postfix:latest
     restart: unless-stopped
