@@ -23,6 +23,7 @@ services:
       - SMTP_HOST=postfix
       - SMTP_PORT=25
       - SMTP_SECURE=false
+      - SMTP_REJECT_UNAUTHORIZED=false
       - PLUGIN_PATH=${PLUGIN_PATH:-}
     volumes:
       - ./bridge-plugins:/app/bridge/plugins
@@ -45,12 +46,11 @@ services:
 
   # Postfix for outbound email delivery
   postfix:
-    image: ghcr.io/nogringo/nostr-mail-postfix:latest
+    image: boky/postfix
     environment:
-      - DKIM_DOMAIN=${FROM_DOMAIN}
+      - DKIM_AUTOGENERATE=true
+      - ALLOWED_SENDER_DOMAINS=${FROM_DOMAIN}
+      - SMTP_DISABLE_TLS=true
     volumes:
       - ./dkim-keys:/etc/opendkim/keys
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
     restart: unless-stopped

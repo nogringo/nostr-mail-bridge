@@ -13,6 +13,9 @@ export class SmtpProvider implements OutboundProvider {
       host: config.smtpHost,
       port: config.smtpPort,
       secure: config.smtpSecure,
+      tls: {
+        rejectUnauthorized: config.smtpRejectUnauthorized,
+      },
       auth: config.smtpUser
         ? {
             user: config.smtpUser,

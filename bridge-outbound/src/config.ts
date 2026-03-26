@@ -22,6 +22,7 @@ export const config = {
   smtpHost: process.env.SMTP_HOST || 'localhost',
   smtpPort: parseInt(process.env.SMTP_PORT || '25', 10),
   smtpSecure: process.env.SMTP_SECURE === 'true',
+  smtpRejectUnauthorized: process.env.SMTP_REJECT_UNAUTHORIZED !== 'false',
   smtpUser: process.env.SMTP_USER || '',
   smtpPass: process.env.SMTP_PASS || '',
 };
