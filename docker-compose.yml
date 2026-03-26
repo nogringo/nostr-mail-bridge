@@ -52,4 +52,8 @@ services:
   postfix:
     build:
       context: ./postfix
+    environment:
+      - DKIM_DOMAIN=${FROM_DOMAIN}
+    volumes:
+      - ./dkim-keys:/etc/opendkim/keys
     restart: unless-stopped

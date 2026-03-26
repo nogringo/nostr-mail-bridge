@@ -26,9 +26,6 @@ vi .env
 BRIDGE_PRIVATE_KEY=<hex_private_key>
 BRIDGE_PUBKEY=<pubkey_hex>
 
-# Nostr Relays
-RELAYS=wss://relay.damus.io,wss://nos.lol,wss://relay.nostr.band
-
 # Bridge Domain
 FROM_DOMAIN=yourdomain.com
 
@@ -44,38 +41,7 @@ PLUGIN_PATH=
 ### Start Services
 
 ```bash
-docker compose up -d --build
-```
-
-### Verify
-
-```bash
-# View logs
-docker compose logs -f
-
-# Check running services
-docker compose ps
-
-# Test NIP-05
-curl https://bridge.yourdomain.com/.well-known/nostr.json?name=_smtp_
-```
-
----
-
-## 🔐 NIP-05
-
-The NIP-05 service enables Nostr email address verification.
-
-### Automatic Configuration (Docker)
-
-The `nip05-service` is included in docker-compose.yml.
-
-```bash
-# Start NIP-05 service
-docker compose up -d nip05-service
-
-# Verify
-curl https://bridge.yourdomain.com/.well-known/nostr.json?name=<npub>
+docker compose up -d
 ```
 
 ---
@@ -91,30 +57,13 @@ curl https://bridge.yourdomain.com/.well-known/nostr.json?name=<npub>
 | TXT | @ | `v=spf1 ip4:VPS_IP -all` | SPF - authorizes VPS |
 | TXT | default._domainkey | `v=DKIM1; k=rsa; p=...` | DKIM - signing |
 
-### Generate DKIM (with Postfix)
+### DKIM
 
+DKIM keys are automatically generated on first start and persisted in `./dkim-keys/`.
+
+**Get your DKIM public key:**
 ```bash
-# Install OpenDKIM
-sudo apt install -y opendkim opendkim-tools
-
-# Generate key
-opendkim-genkey -t -s default -d yourdomain.com
-
-# Display public key
-cat default.txt
-
-# Add to DNS (copy value after 'p=')
+cat dkim-keys/default.txt
 ```
 
-### Verify Configuration
-
-```bash
-# Check SPF
-dig TXT yourdomain.com
-
-# Check DKIM
-dig TXT default._domainkey.yourdomain.com
-
-# Test with email
-echo "Test" | mail -s "SPF/DKIM Test" test@check-auth@verifier.port25.com
-```
+Add the displayed TXT record to your domain zone.
