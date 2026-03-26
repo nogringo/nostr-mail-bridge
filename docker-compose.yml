@@ -56,4 +56,7 @@ services:
       - DKIM_DOMAIN=${FROM_DOMAIN}
     volumes:
       - ./dkim-keys:/etc/opendkim/keys
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     restart: unless-stopped

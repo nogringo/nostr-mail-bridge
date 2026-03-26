@@ -10,6 +10,15 @@ HOSTS_FILE="/etc/opendkim/hosts"
 echo "=== Postfix + OpenDKIM Startup ==="
 echo "Domain: $DOMAIN"
 
+# Create hosts file if it doesn't exist
+if [ ! -f "$HOSTS_FILE" ]; then
+    echo "Creating hosts file..."
+    echo "127.0.0.1" > "$HOSTS_FILE"
+    echo "localhost" >> "$HOSTS_FILE"
+    echo "172.16.0.0/12" >> "$HOSTS_FILE"
+    chown opendkim:opendkim "$HOSTS_FILE"
+fi
+
 # Check if DKIM keys already exist
 if [ ! -f "$KEYS_DIR/default.private" ]; then
     echo "Generating DKIM keys for domain: $DOMAIN..."
@@ -27,13 +36,8 @@ if [ ! -f "$KEYS_DIR/default.private" ]; then
     # Create key table
     echo "default default:$DOMAIN:$KEYS_DIR/default.private" > "$KEY_TABLE"
 
-    # Create hosts file
-    echo "127.0.0.1" > "$HOSTS_FILE"
-    echo "localhost" >> "$HOSTS_FILE"
-    echo "172.16.0.0/12" >> "$HOSTS_FILE"
-
     # Set permissions on tables
-    chown opendkim:opendkim "$SIGNING_TABLE" "$KEY_TABLE" "$HOSTS_FILE"
+    chown opendkim:opendkim "$SIGNING_TABLE" "$KEY_TABLE"
 
     echo ""
     echo "=========================================="
@@ -52,6 +56,17 @@ if [ ! -f "$KEYS_DIR/default.private" ]; then
     echo ""
 else
     echo "DKIM keys found, skipping generation."
+    
+    # Ensure tables exist
+    if [ ! -f "$SIGNING_TABLE" ]; then
+        echo "default@$DOMAIN default" > "$SIGNING_TABLE"
+        chown opendkim:opendkim "$SIGNING_TABLE"
+    fi
+    
+    if [ ! -f "$KEY_TABLE" ]; then
+        echo "default default:$DOMAIN:$KEYS_DIR/default.private" > "$KEY_TABLE"
+        chown opendkim:opendkim "$KEY_TABLE"
+    fi
 fi
 
 # Update Postfix main.cf with actual domain if not example.com

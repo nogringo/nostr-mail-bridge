@@ -46,4 +46,11 @@ services:
   # Postfix for outbound email delivery
   postfix:
     image: ghcr.io/nogringo/nostr-mail-postfix:latest
+    environment:
+      - DKIM_DOMAIN=${FROM_DOMAIN}
+    volumes:
+      - ./dkim-keys:/etc/opendkim/keys
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     restart: unless-stopped
