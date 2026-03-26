@@ -37,9 +37,6 @@ jobs:
           - name: nip05-service
             context: nip05-service
             file: nip05-service/Dockerfile
-          - name: postfix
-            context: postfix
-            file: postfix/Dockerfile
 
     steps:
       - name: Checkout

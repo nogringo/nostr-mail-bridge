@@ -29,10 +29,11 @@ BRIDGE_PUBKEY=<pubkey_hex>
 # Bridge Domain
 FROM_DOMAIN=yourdomain.com
 
-# SMTP Configuration
+# SMTP Configuration (internal)
 SMTP_HOST=postfix
 SMTP_PORT=25
 SMTP_SECURE=false
+SMTP_REJECT_UNAUTHORIZED=false
 
 # Plugins (optional)
 PLUGIN_PATH=
