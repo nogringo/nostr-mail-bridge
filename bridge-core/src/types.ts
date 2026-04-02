@@ -6,6 +6,7 @@ export interface Attachment {
   contentId?: string;
 }
 
+// TODO should contain parsed mime
 export interface IncomingEmail {
   from: string;
   to: string;

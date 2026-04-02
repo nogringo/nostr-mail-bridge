@@ -5,17 +5,20 @@ import { getInboundPrivateKey } from './nostr/keys.js';
 import { runPlugin } from './plugin/index.js';
 import { getConfig } from './config.js';
 
+//? does this function should be splited
 export async function processIncomingEmail(
   email: IncomingEmail,
   sourceType: 'smtp' | 'mailgun',
-  sourceInfo: string
+  sourceInfo: string,
+  recipientPubkey?: string
 ): Promise<ProcessResult> {
   const config = getConfig();
   const privateKey = getInboundPrivateKey();
 
-  // 1. Extract recipient pubkey
-  const recipientPubkey = await extractPubkeyFromEmail(email.to);
-  if (!recipientPubkey) {
+  // 1. Resolve recipient pubkey (use provided or extract from email)
+  //! verify if email.to is the to from enveloppe
+  const pubkey = recipientPubkey || await extractPubkeyFromEmail(email.to);
+  if (!pubkey) {
     console.error(`Could not extract pubkey from: ${email.to}`);
     return { success: false, action: 'reject', message: 'Invalid recipient' };
   }
@@ -30,7 +33,7 @@ export async function processIncomingEmail(
         subject: email.subject,
         text: email.text,
         html: email.html,
-        recipientPubkey,
+        recipientPubkey: pubkey,
       },
       receivedAt: email.timestamp,
       sourceType,
@@ -56,13 +59,13 @@ export async function processIncomingEmail(
     const client = new NostrMailClient(privateKey, config.relays);
 
     await client.sendEmail({
-      to: recipientPubkey,
+      to: pubkey,
       subject: email.subject,
       mime: email.raw,
       selfCopy: false,
     });
 
-    console.log(`Email from ${email.from} processed and sent to ${recipientPubkey}`);
+    console.log(`Email from ${email.from} processed and sent to ${pubkey}`);
     await client.close();
 
   } catch (err) {

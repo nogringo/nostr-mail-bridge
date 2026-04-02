@@ -12,6 +12,7 @@ export async function lookupNip05(name: string, domain: string): Promise<string 
 }
 
 export async function extractPubkeyFromEmail(email: string): Promise<string | null> {
+  //! regex
   const match = email.match(/^([^@]+)@(.+)$/);
   if (!match) return null;
 
