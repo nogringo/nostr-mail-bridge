@@ -62,6 +62,10 @@ export async function processIncomingEmail(
       to: pubkey,
       subject: email.subject,
       mime: email.raw,
+      // Mark the rumor as bridged (inbound SMTP → nostr) per spec, so
+      // recipient clients can distinguish it from a direct nostr email
+      // and surface the legacy sender's address.
+      mailFrom: email.from,
       selfCopy: false,
     });
 
